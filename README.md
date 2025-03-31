@@ -1,4 +1,4 @@
-# 🌞 wake up, sun!
+![TurntTickVeefriendsGIF](https://github.com/user-attachments/assets/9fcd40f2-fab0-4f2f-a5bf-28e9eeae35a3)# 🌞 wake up, sun!
 
 a sunrise-based alarm utility program that wakes you up with the sun (or just before it)
 
@@ -86,7 +86,7 @@ python main.py --test   # runs in test mode without actually setting alarms
 
 ## [🔮] : future enhancements
 
-- **global timezone support**: currently optimized for indian time zones
+- ~**global timezone support**: currently optimized for indian time zones~ ✅
 - **executable versions**: standalone .exe for windows and equivalent for mac/linux
 - **enhanced sounds**: more alarm sound options including nature sounds
 - **recurring alarms**: weekday selector (MTWTFSS) to set alarms for specific days
