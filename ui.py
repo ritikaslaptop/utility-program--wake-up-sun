@@ -4,6 +4,7 @@ from tkinter import messagebox, ttk
 from PIL import Image, ImageTk, ImageSequence
 import threading
 from datetime import datetime, timedelta
+import pytz
 
 #import functions from main.py
 from main import get_sunrise_time, schedule_alarm, load_alarm_time, delete_alarm
@@ -16,12 +17,112 @@ WHITE = "#FFFFFF"
 TEXT_COLOR = "#333333"
 ALARM_SET_COLOR = "#FF0000"
 
+#new timezones dictionary
+city_timezones = {
+    "Tokyo": "Asia/Tokyo",
+    "New York": "America/New_York",
+    "London": "Europe/London",
+    "Sydney": "Australia/Sydney",
+    "Delhi": "Asia/Kolkata",
+    "Mumbai": "Asia/Kolkata",
+    "Bangalore": "Asia/Kolkata",
+    "Kolkata": "Asia/Kolkata",
+    "Chennai": "Asia/Kolkata",
+    "Hyderabad": "Asia/Kolkata",
+    "Dubai": "Asia/Dubai",
+    "Los Angeles": "America/Los_Angeles",
+    "San Francisco": "America/Los_Angeles",
+    "Chicago": "America/Chicago",
+    "Houston": "America/Chicago",
+    "Toronto": "America/Toronto",
+    "Mexico City": "America/Mexico_City",
+    "São Paulo": "America/Sao_Paulo",
+    "Buenos Aires": "America/Argentina/Buenos_Aires",
+    "Rio de Janeiro": "America/Sao_Paulo",
+    "Paris": "Europe/Paris",
+    "Berlin": "Europe/Berlin",
+    "Madrid": "Europe/Madrid",
+    "Rome": "Europe/Rome",
+    "Amsterdam": "Europe/Amsterdam",
+    "Moscow": "Europe/Moscow",
+    "Beijing": "Asia/Shanghai",
+    "Shanghai": "Asia/Shanghai",
+    "Hong Kong": "Asia/Hong_Kong",
+    "Singapore": "Asia/Singapore",
+    "Seoul": "Asia/Seoul",
+    "Bangkok": "Asia/Bangkok",
+    "Jakarta": "Asia/Jakarta",
+    "Manila": "Asia/Manila",
+    "Kuala Lumpur": "Asia/Kuala_Lumpur",
+    "Istanbul": "Europe/Istanbul",
+    "Cairo": "Africa/Cairo",
+    "Johannesburg": "Africa/Johannesburg",
+    "Nairobi": "Africa/Nairobi",
+    "Lagos": "Africa/Lagos",
+    "Cape Town": "Africa/Johannesburg",
+    "Athens": "Europe/Athens",
+    "Lisbon": "Europe/Lisbon",
+    "Vienna": "Europe/Vienna",
+    "Stockholm": "Europe/Stockholm",
+    "Oslo": "Europe/Oslo",
+    "Brussels": "Europe/Brussels",
+    "Zurich": "Europe/Zurich",
+    "Helsinki": "Europe/Helsinki",
+    "Copenhagen": "Europe/Copenhagen",
+    "Dublin": "Europe/Dublin",
+    "Edinburgh": "Europe/London",
+    "Glasgow": "Europe/London",
+    "Warsaw": "Europe/Warsaw",
+    "Prague": "Europe/Prague",
+    "Budapest": "Europe/Budapest",
+    "Belgrade": "Europe/Belgrade",
+    "Bucharest": "Europe/Bucharest",
+    "Sofia": "Europe/Sofia",
+    "Ankara": "Europe/Istanbul",
+    "Kiev": "Europe/Kiev",
+    "Hanoi": "Asia/Ho_Chi_Minh",
+    "Taipei": "Asia/Taipei",
+    "Riyadh": "Asia/Riyadh",
+    "Doha": "Asia/Qatar",
+    "Muscat": "Asia/Muscat",
+    "Tehran": "Asia/Tehran",
+    "Baghdad": "Asia/Baghdad",
+    "Karachi": "Asia/Karachi",
+    "Lahore": "Asia/Karachi",
+    "Dhaka": "Asia/Dhaka",
+    "Colombo": "Asia/Colombo",
+    "Kathmandu": "Asia/Kathmandu",
+    "Thimphu": "Asia/Thimphu",
+    "Canberra": "Australia/Sydney",
+    "Melbourne": "Australia/Melbourne",
+    "Brisbane": "Australia/Brisbane",
+    "Perth": "Australia/Perth",
+    "Auckland": "Pacific/Auckland",
+    "Wellington": "Pacific/Auckland",
+    "Honolulu": "Pacific/Honolulu",
+    "Anchorage": "America/Anchorage",
+    "Denver": "America/Denver",
+    "Seattle": "America/Los_Angeles",
+    "Washington DC": "America/New_York",
+    "Boston": "America/New_York",
+    "Philadelphia": "America/New_York",
+    "Dallas": "America/Chicago",
+    "Miami": "America/New_York",
+    "Montreal": "America/Toronto",
+    "Vancouver": "America/Vancouver",
+    "Ottawa": "America/Toronto",
+    "Santiago": "America/Santiago",
+    "Lima": "America/Lima",
+    "Bogotá": "America/Bogota",
+    "Caracas": "America/Caracas",
+    "San Juan": "America/Puerto_Rico"
+}
 
 class SunriseAlarmUI:
     def __init__(self, root):
         self.root = root
         self.root.title("wake up,sun!")
-        # Optimized for phone-like screen size
+        #optimized for phone-like screen size
         self.root.geometry("385x600")
         self.root.configure(bg=PASTEL_BLUE)
 
@@ -231,8 +332,23 @@ class SunriseAlarmUI:
             return
 
         #status while fetching
-        self.status_var.set("fetching sunrise time...")
+        self.status_var.set("Fetching sunrise time...")
         self.root.update()
+        
+        def convert_to_local_time(utc_timestamp, city_name):
+            try:
+                utc_time = datetime.fromtimestamp(utc_timestamp, pytz.utc)
+                city_name = city_name.title()
+                
+                #check if the city exists in the timezone dictionary
+                if city_name in city_timezones:
+                    local_tz = pytz.timezone(city_timezones[city_name])
+                    local_time = utc_time.astimezone(local_tz)
+                    return local_time
+                else:
+                    raise ValueError(f"Error: Timezone for {city_name} not available.")
+            except Exception as e:
+                raise ValueError(f"Error converting time: {str(e)}")
 
         #thread for API call to avoid freezing the UI
         def fetch_sunrise():
@@ -240,22 +356,26 @@ class SunriseAlarmUI:
                 self.sunrise_time = get_sunrise_time(city)
 
                 if self.sunrise_time:
-                    #format sunrise time for display
-                    formatted_time = self.sunrise_time.strftime("%H:%M")
+                    #convert UTC to Local
+                    local_time = convert_to_local_time(self.sunrise_time.timestamp(), city)
+                    formatted_time = local_time.strftime("%I:%M %p")
 
                     #update UI from main thread
-                    self.root.after(0, lambda: self.sunrise_info.config(
-                        text=f"the sun rises at {formatted_time} in {city}"))
-                    self.root.after(0, lambda: self.status_var.set(
-                        f"fetched sunrise: {formatted_time}"))
-                    self.root.after(0, lambda: self.sunrise_btn.config(state="normal"))
+                    self.root.after(0, lambda: (
+                        self.sunrise_info.config(text=f"The sun rises at {formatted_time} in {city.title()}"),
+                        self.status_var.set(f"Fetched sunrise: {formatted_time}"),
+                        self.sunrise_btn.config(state="normal")
+                    ))
                 else:
-                    self.root.after(0, lambda: messagebox.showerror(
-                        "error", "could not get sunrise data for this location"))
-                    self.root.after(0, lambda: self.status_var.set("Failed to get sunrise data"))
-            except Exception as e:
-                self.root.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
-                self.root.after(0, lambda: self.status_var.set("Failed to get sunrise data"))
+                    self.root.after(0, lambda: (
+                        messagebox.showerror("Error", "Could not get sunrise data for this location"),
+                        self.status_var.set("Failed to get sunrise data")
+                    ))
+            except :
+                self.root.after(0, lambda: (
+                    messagebox.showerror("Error", f"Error: {str(e)}"),
+                    self.status_var.set("Failed to get sunrise data")
+                ))
 
         #start the thread
         threading.Thread(target=fetch_sunrise, daemon=True).start()
@@ -285,7 +405,7 @@ class SunriseAlarmUI:
                 messagebox.showerror("Error", f"Failed to set alarm: {str(e)}")
 
     def delete_alarm(self):
-        #elete the alarm using function from main.py
+        #delete the alarm using function from main.py
         try:
             #call the delete_alarm function from main.py
             delete_alarm()
@@ -302,7 +422,6 @@ class SunriseAlarmUI:
         if alarm_time:
             self.status.config(fg=ALARM_SET_COLOR)
             self.status_var.set(f"alarm is set for {alarm_time} already")
-
 
 #run the application
 if __name__ == "__main__":
