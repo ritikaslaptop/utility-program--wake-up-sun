@@ -1,4 +1,4 @@
-![TurntTickVeefriendsGIF](https://github.com/user-attachments/assets/9fcd40f2-fab0-4f2f-a5bf-28e9eeae35a3)# 🌞 wake up, sun!
+# 🌞 wake up, sun!
 
 a sunrise-based alarm utility program that wakes you up with the sun (or just before it)
 
