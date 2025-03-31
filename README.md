@@ -28,7 +28,7 @@ git clone https://github.com/yourusername/wakeup-sun.git
 cd wakeup-sun
 
 # install dependencies
-pip install pillow requests sounddevice numpy
+pip install pillow requests sounddevice numpy pytz
 
 # set up your api key (get one from openweathermap.org)
 # edit main.py and replace API_KEY with your key
